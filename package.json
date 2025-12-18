@@ -13,6 +13,9 @@
     "db:migrate": "node dist/scripts/migrate.js",
     "db:studio": "drizzle-kit studio"
   },
+  "bin": {
+    "planner-mcp": "dist/index.js"
+  },
   "keywords": [
     "mcp",
     "planner",
