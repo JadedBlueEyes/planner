@@ -133,7 +133,37 @@ Here are some examples of how to use the Task Planner with Claude:
 
 ## Data Storage
 
-Task data is stored in a local JSON file (`tasks.json`) in the root directory of the project.
+Task and project data is stored in a local SQLite database (`planner.db`) in the root directory of the project.
+
+### Database Setup
+
+After installation, run the migrations to set up the database:
+
+```bash
+pnpm run db:migrate
+```
+
+### Database Configuration
+
+By default, the database file is created at `./planner.db` in the project root. You can customize the location by setting the `SQLITE_DB_PATH` environment variable:
+
+```bash
+SQLITE_DB_PATH=/path/to/your/database.db
+```
+
+### Database Schema
+
+The project uses Drizzle ORM with SQLite. To generate new migrations after schema changes:
+
+```bash
+pnpm run db:generate
+```
+
+To view and edit the database with Drizzle Studio:
+
+```bash
+pnpm run db:studio
+```
 
 ## License
 

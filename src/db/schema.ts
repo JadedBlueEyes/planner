@@ -1,13 +1,11 @@
 import {
-  boolean,
-  integer,
-  jsonb,
-  pgEnum,
-  pgTable,
+  sqliteTable,
   text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+  integer,
+  blob,
+} from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
+
 /*
 
 1. Make project (save to db)
@@ -25,125 +23,117 @@ import {
 13. Get screens approved by the client
 */
 
-// Define priority enum
-export const priorityEnum = pgEnum("priority", ["low", "medium", "high"]);
-export const statusEnum = pgEnum("status", [
-  "open",
-  "in progress",
-  "completed",
-]);
-
 // Projects table
-export const projects = pgTable("projects", {
-  id: uuid("id").primaryKey().defaultRandom(),
+export const projects = sqliteTable("projects", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
   description: text("description"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
   stage: text("stage").notNull().default("requirements"),
 });
 
-export const projectRequirements = pgTable("project_requirements", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  projectId: uuid("project_id")
+export const projectRequirements = sqliteTable("project_requirements", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
   requirement: text("requirement").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
 });
 
 // Tasks table
-export const tasks = pgTable("tasks", {
-  id: uuid("id").primaryKey().defaultRandom(),
+export const tasks = sqliteTable("tasks", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   title: text("title").notNull(),
   description: text("description"),
-  completed: boolean("completed").notNull().default(false),
-  parentId: uuid("parent_id"),
-  projectId: uuid("project_id")
+  completed: integer("completed", { mode: "boolean" }).notNull().default(false),
+  parentId: text("parent_id"),
+  projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-  priority: priorityEnum("priority"),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  priority: text("priority", { enum: ["low", "medium", "high"] }),
   position: integer("position"),
 });
 
-export const userStories = pgTable("user_stories", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  projectId: uuid("project_id")
+export const userStories = sqliteTable("user_stories", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
 });
 
-export const projectOverviews = pgTable("project_overviews", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  projectId: uuid("project_id")
+export const projectOverviews = sqliteTable("project_overviews", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
-  techStack: jsonb("tech_stack").$type<{
+  techStack: blob("tech_stack", { mode: "json" }).$type<{
     frontend: string;
     backend: string;
     database: string;
     hosting: string;
     auth: string;
   }>(),
-  sharedComponents: jsonb("shared_components").$type<
+  sharedComponents: blob("shared_components", { mode: "json" }).$type<
     {
       name: string;
       description: string;
     }[]
   >(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-  status: statusEnum("status").notNull().default("open"),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  status: text("status", { enum: ["open", "in progress", "completed"] }).notNull().default("open"),
 });
 
-export const dataModels = pgTable("data_models", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  projectId: uuid("project_id")
+export const dataModels = sqliteTable("data_models", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
-  properties: jsonb("properties").notNull(),
-  relations: jsonb("relations").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-  status: statusEnum("status").notNull().default("open"), // open, in progress, completed
+  properties: blob("properties", { mode: "json" }).notNull(),
+  relations: blob("relations", { mode: "json" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  status: text("status", { enum: ["open", "in progress", "completed"] }).notNull().default("open"),
 });
 
-export const apiEndpoints = pgTable("api_endpoints", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  projectId: uuid("project_id")
+export const apiEndpoints = sqliteTable("api_endpoints", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
   endpoint: text("endpoint").notNull(),
   description: text("description"),
   method: text("method").notNull(),
-  parameters: jsonb("parameters").notNull(),
+  parameters: blob("parameters", { mode: "json" }).notNull(),
   requestFormat: text("request_format").notNull(),
   responseFormat: text("response_format").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-  status: statusEnum("status").notNull().default("open"),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  status: text("status", { enum: ["open", "in progress", "completed"] }).notNull().default("open"),
 });
 
-export const screens = pgTable("screens", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  projectId: uuid("project_id")
+export const screens = sqliteTable("screens", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   path: text("path").notNull(),
   description: text("description"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-  status: statusEnum("status").notNull().default("open"),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  status: text("status", { enum: ["open", "in progress", "completed"] }).notNull().default("open"),
 });
 
 // Types for use in the application

@@ -9,7 +9,6 @@ import {
   projectOverviews,
   projects,
   screens,
-  statusEnum,
   userStories,
 } from "./db/schema.js";
 import { withErrorHandling } from "./utils/errorHandling.js";
@@ -44,7 +43,7 @@ export const registerExecutionTools = (server: McpServer) => {
       await db
         .update(projectOverviews)
         .set({
-          status: status as (typeof statusEnum.enumValues)[number],
+          status: status as "open" | "in progress" | "completed",
         })
         .where(eq(projectOverviews.projectId, projectId));
 
@@ -75,7 +74,7 @@ export const registerExecutionTools = (server: McpServer) => {
       await db
         .update(dataModels)
         .set({
-          status: status as (typeof statusEnum.enumValues)[number],
+          status: status as "open" | "in progress" | "completed",
         })
         .where(
           and(eq(dataModels.projectId, projectId), eq(dataModels.id, modelId))
@@ -110,7 +109,7 @@ export const registerExecutionTools = (server: McpServer) => {
       await db
         .update(apiEndpoints)
         .set({
-          status: status as (typeof statusEnum.enumValues)[number],
+          status: status as "open" | "in progress" | "completed",
         })
         .where(
           and(
@@ -144,7 +143,7 @@ export const registerExecutionTools = (server: McpServer) => {
       await db
         .update(screens)
         .set({
-          status: status as (typeof statusEnum.enumValues)[number],
+          status: status as "open" | "in progress" | "completed",
         })
         .where(and(eq(screens.projectId, projectId), eq(screens.id, screenId)));
 
